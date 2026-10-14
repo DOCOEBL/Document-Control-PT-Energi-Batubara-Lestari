@@ -1326,8 +1326,25 @@
         const fileExt = name => { const m = /\.([a-z0-9]+)$/i.exec(String(name || '')); return m ? m[1].toLowerCase() : ''; };
         const blobToB64 = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(String(fr.result).split(',')[1] || ''); fr.onerror = () => rej(new Error('Gagal membaca file dari perangkat.')); fr.readAsDataURL(blob); });
         const b64ToBytes = b64 => { const bin = atob(b64); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; };
+        // Saat server menolak (401/403), cari tahu penyebabnya dari isi token login supaya pesannya tepat.
+        const tokenInfo = () => {
+            try {
+                const t = fbApi.session && fbApi.session.idToken;
+                const b = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                return JSON.parse(decodeURIComponent(escape(atob(b + '==='.slice((b.length + 3) % 4)))));
+            } catch (e) { return null; }
+        };
+        const dbProject = () => { const m = /^https?:\/\/([a-z0-9-]+?)(?:-default-rtdb)?\.(?:firebaseio\.com|[a-z0-9-]+\.firebasedatabase\.app)/i.exec(CLOUD.dbUrl || ''); return m ? m[1].toLowerCase() : ''; };
+        const deniedReason = what => {
+            const tk = tokenInfo(), db = dbProject(), email = tk && String(tk.email || '').toLowerCase();
+            const allowed = ['docoebl', 'dept', 'viewer'].map(u => u + '@' + CLOUD.emailDomain);
+            if (!tk) return what + ' ditolak server karena sesi login tidak terbaca. Keluar, lalu masuk lagi.';
+            if (db && tk.aud && tk.aud !== db) return what + ' ditolak server: akun login berasal dari proyek Firebase "' + tk.aud + '", sedangkan database milik proyek "' + db + '". apiKey dan dbUrl di config.js harus dari proyek Firebase yang sama.';
+            if (!allowed.includes(email)) return what + ' ditolak server: akun "' + (email || '-') + '" tidak ada di aturan Firebase. Email akun di Firebase Authentication harus persis ' + allowed.join(', ') + '.';
+            return what + ' ditolak server untuk akun ' + email + '. Aturan di Firebase (Realtime Database, tab Rules) belum memuat bagian "files". Tempel ulang isi firebase-rules.json terbaru lalu klik Publish.';
+        };
         const fileHttpError = (status, what) => new Error(
-            (status === 401 || status === 403) ? what + ' ditolak server (kode ' + status + '). Pastikan aturan terbaru dari firebase-rules.json sudah di-Publish di Firebase dan akun Anda masih login.'
+            (status === 401 || status === 403) ? deniedReason(what) + ' (kode ' + status + ')'
             : status === 413 ? 'File terlalu besar untuk server.'
             : what + ' gagal (kode ' + status + '). Periksa koneksi lalu coba lagi.');
         const fbSet = (root, parts, val) => {
