@@ -377,6 +377,68 @@
                     <p class="mt-2.5 text-xs text-white/60" x-text="reviewStats.done + ' dari ' + reviewStats.total + ' dokumen sudah direview'"></p>
                 </section>
 
+                <!-- Folder 8: Struktur Organisasi dan Job Description per departemen -->
+                <section x-show="isSoFolder" x-cloak class="space-y-4">
+                    <div x-show="showUnitGrid" class="space-y-6">
+                        <p class="text-sm text-slate-500">Pilih departemen untuk melihat struktur organisasi dan job description setiap posisinya.</p>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-700 mb-2">Perusahaan</h3>
+                            <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                <button @click="activeUnit = '__none'; activePos = ''" class="min-w-0 w-full text-left bg-white border border-slate-200 hover:border-brand-navy rounded-xl px-4 py-3.5 transition-colors flex items-center gap-3">
+                                    <span class="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center bg-brand-navy/10 text-brand-navy"><i data-lucide="network" class="w-5 h-5"></i></span>
+                                    <span class="min-w-0">
+                                        <span class="block font-semibold text-sm text-slate-800">Struktur organisasi perusahaan</span>
+                                        <span class="block text-[11px] text-slate-500 mt-0.5" x-text="soDocs('__none').length + ' dokumen, tanpa departemen tertentu'"></span>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <template x-for="grp in soGroups" :key="grp.area">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-700 mb-2" x-text="(grp.area === 'HO' ? 'Head Office (HO)' : 'Site') + ', ' + grp.units.length + ' departemen'"></h3>
+                                <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                                    <template x-for="u in grp.units" :key="u.key">
+                                        <button @click="activeUnit = u.key; activePos = ''" class="min-w-0 w-full text-left bg-white border border-slate-200 hover:border-brand-navy rounded-xl px-4 py-3.5 transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-10 h-10 rounded-lg shrink-0 flex items-center justify-center" :class="soInfo(u.key).docs ? 'bg-brand-navy/10 text-brand-navy' : 'bg-slate-100 text-slate-400'"><i data-lucide="folder" class="w-5 h-5"></i></span>
+                                                <span class="min-w-0 flex-1">
+                                                    <span class="flex items-baseline justify-between gap-2">
+                                                        <span class="min-w-0 font-semibold text-sm text-slate-800 truncate" x-text="u.dept"></span>
+                                                        <span class="font-display font-bold text-sm shrink-0" :class="soInfo(u.key).pct === 100 ? 'text-brand-leaf' : (soInfo(u.key).pct ? 'text-brand-navy' : 'text-slate-400')" x-text="soInfo(u.key).pct + '%'"></span>
+                                                    </span>
+                                                    <span class="block text-[11px] text-slate-500 mt-0.5" x-text="soInfo(u.key).docs + ' dokumen, ' + soInfo(u.key).done + ' dari ' + soInfo(u.key).positions + ' posisi terisi'"></span>
+                                                </span>
+                                            </div>
+                                            <div class="mt-2.5 h-1.5 rounded-full bg-slate-200 overflow-hidden"><div class="h-full rounded-full" :class="soInfo(u.key).pct === 100 ? 'bg-brand-leaf' : 'bg-brand-navy'" :style="'width:' + soInfo(u.key).pct + '%'"></div></div>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div x-show="activeUnit" class="space-y-4">
+                        <div class="flex items-center gap-2 text-sm flex-wrap">
+                            <button @click="activeUnit = ''; activePos = ''; searchQuery = ''" class="text-brand-navy font-semibold hover:underline flex items-center gap-1"><i data-lucide="chevron-left" class="w-4 h-4"></i> Semua departemen</button>
+                            <span class="text-slate-300">/</span>
+                            <span class="font-display font-bold text-slate-900" x-text="activeUnit === '__none' ? 'Struktur organisasi perusahaan' : (activeUnitObj ? activeUnitObj.area + ' · ' + activeUnitObj.dept : '')"></span>
+                        </div>
+                        <div x-show="activeUnitObj" class="bg-white rounded-2xl border border-slate-200 p-4">
+                            <div class="flex items-baseline justify-between gap-3 mb-3">
+                                <p class="text-sm font-bold text-slate-700" x-text="'Posisi (' + positionsOf(activeUnit).length + ')'"></p>
+                                <p class="text-xs text-slate-500" x-text="soInfo(activeUnit).done + ' dari ' + soInfo(activeUnit).positions + ' posisi sudah punya job description'"></p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button @click="activePos = ''" :class="activePos === '' ? 'bg-brand-navy text-white border-brand-navy' : 'bg-white text-slate-600 border-slate-200 hover:border-brand-navy'" class="px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors">Semua <span class="opacity-70" x-text="soDocs(activeUnit).length"></span></button>
+                                <template x-for="p in positionsOf(activeUnit)" :key="p">
+                                    <button @click="activePos = activePos === p ? '' : p" :class="activePos === p ? 'bg-brand-navy text-white border-brand-navy' : (posCount(p) ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:border-brand-navy' : 'bg-white text-slate-500 border-dashed border-slate-300 hover:border-brand-navy')" class="px-3 py-1.5 rounded-full border text-xs font-semibold transition-colors inline-flex items-center gap-1.5" :title="posCount(p) ? posCount(p) + ' dokumen' : 'Belum ada dokumen'">
+                                        <i x-show="posCount(p)" data-lucide="check" class="w-3.5 h-3.5"></i><span x-text="p"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Navigasi Departemen (folder 11 dan 12) -->
                 <section x-show="isDeptFolder" x-cloak class="space-y-4">
                     <div x-show="showDeptGrid">
@@ -569,7 +631,7 @@
                 </div>
 
                 <!-- Daftar dokumen -->
-                <div x-show="!isFindings && !isDash && !showDeptGrid && !showTypeGrid" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <div x-show="!isFindings && !isDash && !showDeptGrid && !showTypeGrid && !showUnitGrid" class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
                     <ul class="divide-y divide-slate-100">
                         <template x-for="doc in filteredDocs" :key="doc.id">
                             <li class="px-4 md:px-5 py-4 flex flex-col lg:flex-row lg:items-start gap-x-6 gap-y-3 hover:bg-slate-50 transition-colors">
@@ -591,7 +653,7 @@
                                         </div>
                                         <p class="font-semibold text-[15px] text-slate-900 leading-snug mt-1.5" x-text="doc.title"></p>
                                         <p x-show="isAllDocs" class="text-[11px] font-semibold text-emerald-700 mt-1" x-text="folderName(doc.moduleId)"></p>
-                                        <p x-show="doc.dept" class="text-[11px] font-semibold text-emerald-700 mt-1" x-text="doc.dept + ', ' + (doc.docType || 'tanpa jenis dokumen')"></p>
+                                        <p x-show="doc.dept" class="text-[11px] font-semibold text-emerald-700 mt-1" x-text="docTag(doc)"></p>
                                         <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
                                             <span class="px-2.5 py-1 text-[11px] rounded-full font-semibold inline-flex items-center gap-1.5"
                                                   :class="{
@@ -687,6 +749,23 @@
                             <option :value="mod.id" x-text="mod.name"></option>
                         </template>
                     </select>
+                </div>
+                <div x-show="newDocKind === 'umum' && parseInt(newDoc.moduleId) === 8" class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Departemen</label>
+                        <select x-model="newDoc.unit" @change="newDoc.position = ''" class="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">Struktur organisasi perusahaan</option>
+                            <optgroup label="HO"><template x-for="u in unitsOfArea('HO')" :key="u.key"><option :value="u.key" x-text="u.dept"></option></template></optgroup>
+                            <optgroup label="Site"><template x-for="u in unitsOfArea('Site')" :key="u.key"><option :value="u.key" x-text="u.dept"></option></template></optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Posisi (untuk job description)</label>
+                        <select x-model="newDoc.position" :disabled="!newDoc.unit" class="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:bg-slate-100">
+                            <option value="">Seluruh departemen</option>
+                            <template x-for="p in positionsOf(newDoc.unit)" :key="p"><option :value="p" x-text="p"></option></template>
+                        </select>
+                    </div>
                 </div>
                 <div x-show="newDocKind === 'dept'" class="grid sm:grid-cols-2 gap-4">
                     <div>
@@ -788,8 +867,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nama Reviewer</label>
-                    <input type="text" x-model="reviewForm.reviewer" placeholder="Nama reviewer..." class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+                    <span class="block font-semibold text-slate-700 mb-1">Nama Reviewer</span>
+                    <p class="w-full border rounded-lg p-2.5 bg-slate-50 text-slate-700 font-medium flex items-center gap-2"><i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400"></i><span x-text="reviewerName"></span></p>
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Catatan Review</label>
@@ -876,6 +955,23 @@
                     <select x-model="editForm.moduleId" class="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                         <template x-for="mod in formModules" :key="mod.id"><option :value="mod.id" x-text="mod.name"></option></template>
                     </select>
+                </div>
+                <div x-show="parseInt(editForm.moduleId) === 8" class="grid sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Departemen</label>
+                        <select x-model="editForm.unit" @change="editForm.position = ''" class="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <option value="">Struktur organisasi perusahaan</option>
+                            <optgroup label="HO"><template x-for="u in unitsOfArea('HO')" :key="u.key"><option :value="u.key" x-text="u.dept"></option></template></optgroup>
+                            <optgroup label="Site"><template x-for="u in unitsOfArea('Site')" :key="u.key"><option :value="u.key" x-text="u.dept"></option></template></optgroup>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Posisi (untuk job description)</label>
+                        <select x-model="editForm.position" :disabled="!editForm.unit" class="w-full border rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:bg-slate-100">
+                            <option value="">Seluruh departemen</option>
+                            <template x-for="p in positionsOf(editForm.unit)" :key="p"><option :value="p" x-text="p"></option></template>
+                        </select>
+                    </div>
                 </div>
                 <div x-show="isDeptId(editForm.moduleId)" class="grid grid-cols-2 gap-4">
                     <div>
@@ -1151,8 +1247,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Nama Reviewer</label>
-                    <input type="text" x-model="findingReviewForm.reviewer" required class="w-full border rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                    <span class="block font-semibold text-slate-700 mb-1">Nama Reviewer</span>
+                    <p class="w-full border rounded-lg p-2.5 bg-slate-50 text-slate-700 font-medium flex items-center gap-2"><i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400"></i><span x-text="reviewerName"></span></p>
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Catatan Review</label>
@@ -1294,6 +1390,38 @@
         const USERS = normUsers(CFG.users).length ? normUsers(CFG.users) : normUsers(DEFAULT_USERS);
         const ALLOW_GUEST_VIEWER = false; // true = tombol "Lihat dokumen" masuk tanpa login. false = wajib login dengan akun Viewer.
         const DEPT_EDIT_FOLDERS = [11, 12]; // folder yang boleh ditambah dan diubah oleh akun Departemen
+        const REVIEWER_NAME = 'Document Control';   // nama reviewer selalu Document Control
+        // Folder 8 (Struktur Organisasi dan Job Description): satu folder per departemen, dikelompokkan HO dan Site.
+        // Ubah daftar ini bila ada departemen atau posisi baru. Departemen diberi kunci "Area|Departemen".
+        const SO_MODULE = 8;
+        const SO_UNITS = [
+            { area: "HO", dept: "Direksi", positions: ["Direktur Utama", "Direktur HCA", "Direktur FAT", "Direktur Operasional", "Direktur Marketing"] },
+            { area: "HO", dept: "Internal Audit", positions: ["Internal Audit"] },
+            { area: "HO", dept: "CPOC", positions: ["CPOC Division Head", "Strategic Planning Management Departement Head", "Management Development", "Performance Planning Analyst", "Quality Assurance Specialist"] },
+            { area: "HO", dept: "HCGS", positions: ["HCGS Division Head"] },
+            { area: "HO", dept: "Engineering", positions: ["Engineering Division Head", "Mine Strategic dan Departement Head", "Resources and Reserves Development", "Mine Strategic Planning", "Mine Development", "Mine Operation Development Department Head", "MOCO Coordinator", "SHE Development", "Mine Economic Development Department Head", "Cost Control Specialist"] },
+            { area: "HO", dept: "Operation", positions: ["Operation Division Head"] },
+            { area: "HO", dept: "Marketing", positions: ["Business Development Division Head", "Sales & Marketing Department Head", "Sales", "Market Analyst", "Barging Schedule", "Transhipment"] },
+            { area: "HO", dept: "HHCA", positions: ["Corporate Secretary", "Advisor", "HCGS Departement Head", "HC Operation Officer", "HC System Development Officer", "Compentation & Benefit Officer", "GS Infra Officer", "GS Support Officer", "IT Specialist"] },
+            { area: "HO", dept: "Legal & Permit", positions: ["Legal & Permit Deaprtement Head", "Legal Section Head", "Permit Section Head", "Legal Officer", "Compliance Officer", "Permit Officer", "Legal & Permit Admin"] },
+            { area: "HO", dept: "Procurement", positions: ["Procurement Departement Head", "Procurement Section Head", "Expenditing & Vendor Performance Supervisor", "Procurement Officer", "Procurement Expenditure"] },
+            { area: "HO", dept: "FAT", positions: ["Finance Department Head", "Accounting Department Head", "Finance Operation Section Head", "Accounting Section Head", "Tax Section Head", "Finance Coordinator", "A/R Officer", "Payment Officer", "Corporate Finance Officer", "Accounting Officer", "Accounting Officer (Inventory)", "Tax Officer"] },
+            { area: "Site", dept: "HOO", positions: ["Head of Operation"] },
+            { area: "Site", dept: "KTT", positions: ["Kepala Teknik Tambang"] },
+            { area: "Site", dept: "LGH", positions: ["Legal & General Handling Specialist"] },
+            { area: "Site", dept: "GA", positions: ["General Admin"] },
+            { area: "Site", dept: "CDC", positions: ["Compliance & Document Control Specialist"] },
+            { area: "Site", dept: "Operation", positions: ["Operation Department Head", "Overburden Section Head", "Overburden Specialist", "Coal Getting Section Head", "Coal Getting Specialist", "Infrastructure Specialist"] },
+            { area: "Site", dept: "Port", positions: ["Port Section Head", "Port Group Leader", "Port Checker", "Port Administration"] },
+            { area: "Site", dept: "HCA", positions: ["HCA Department Head", "Chief Security", "Security", "HCGS Group Leader", "General Administration Section Head", "Procurement Group Leader", "Fuelman", "Finance Specialist"] },
+            { area: "Site", dept: "TSP", positions: ["Technical Services & Planning Department Head", "Mine Plan Engineer Section Head", "Geologist", "Drill Blasting & Explosive", "Mine Plan Engineer Specialist", "Project Cost Control Specialist", "Survey Section Head", "Data Processing Specialist", "Survey Group Leader", "Crew Survey"] },
+            { area: "Site", dept: "CSR", positions: ["Corporate Affairs Department Head", "CSR & Landbank Specialist", "PPM Specialist"] },
+            { area: "Site", dept: "CQPP", positions: ["Coal Quality and Processing Plant Department Head", "Coal Quality and Processing Control Section Head", "Coal Quality Group Leader", "Coal Quality Control Crew", "Coal Processing Specialist", "Coal Hauling Section Head", "Weight Bridge & Hauling Group Leader", "Weight Bridge Operator", "Hauling Specialist"] },
+            { area: "Site", dept: "WKTT", positions: ["Wakil Kepala Teknik Tambang"] },
+            { area: "Site", dept: "SHE", positions: ["SHE Department Head", "System Compliance & Training Section Head", "System & Training Specialist", "Permit & Commisioning Specialist", "Safety & Enviroment Section Head", "Safety & Enviroment Group Leader", "SHE Crew", "Health & ERT Section Head", "Paramedic Specialist", "ERT Crew"] },
+            { area: "Site", dept: "RNR", positions: ["Revegetasi & Rehabilitation Department Head", "Revegetation Section Head", "Reclamation Specialist", "Nursery Group Leader", "Nursery Crew", "Revegetation Group Leader", "Revegetation Crew", "Rehabilitiation DAS Section Head", "Rehabilitation DAS Group Leader", "Rehabilitation Crew"] }
+        ].map(u => ({ ...u, key: u.area + '|' + u.dept }));
+        const soUnit = key => SO_UNITS.find(u => u.key === key) || null;
         const VIEWER_CAN_OPEN_SHAREPOINT = true; // false = tombol "Buka di SharePoint" hanya untuk admin
         const DEPT_SITE = ['KTT', 'Gudang Handak', 'SHE', 'Technical Service & Planning', 'Mining Operation Production', 'Coal Crushing Plant & Hauling', 'Quality Control', 'Revegetasi & Rehabilitasi', 'Government Relation & CSR', 'Human Capital & Administration', 'Legal Compliance & General Handling'];
         const DEPT_HO = ['Internal Audit', 'CPOC', 'FAT', 'Engineering & Operation', 'Marketing', 'HCGS', 'Legal & Permit', 'Top Management'];
@@ -2245,6 +2373,10 @@
             Alpine.data('documentControlApp', () => ({
                 activeModule: 0,
                 activeDept: '',
+                activeUnit: '',        // folder 8: departemen yang sedang dibuka ("HO|CPOC", atau '__none' untuk SO perusahaan)
+                activePos: '',         // folder 8: posisi yang sedang disaring
+                soUnits: SO_UNITS,
+                reviewerName: REVIEWER_NAME,
                 activeType: '',
                 docTypes: DOC_TYPES,
                 docTypeShort: DOC_TYPE_SHORT,
@@ -2317,6 +2449,8 @@
                 remoteWaiting: false,
                 lastEvent: 0,
                 newDoc: {
+                    unit: '',
+                    position: '',
                     spUrl: '',
                     moduleId: 1,
                     code: '',
@@ -2368,7 +2502,9 @@
                         let matchReview = this.selectedFilterReview === '' || (doc.reviewStatus || 'Belum Direview') === this.selectedFilterReview;
                         let matchDept = !(this.isDeptFolder && this.activeDept) || (this.activeDept === '__none' ? !doc.dept : doc.dept === this.activeDept);
                         let matchType = !(this.isDeptFolder && this.activeType) || (this.activeType === '__none' ? !doc.docType : doc.docType === this.activeType);
-                        return matchModule && matchIso && matchSearch && matchReview && matchDept && matchType;
+                        let matchUnit = !(this.isSoFolder && this.activeUnit) || (this.activeUnit === '__none' ? !doc.dept : this.unitKeyOf(doc) === this.activeUnit);
+                        let matchPos = !(this.isSoFolder && this.activePos) || doc.position === this.activePos;
+                        return matchModule && matchIso && matchSearch && matchReview && matchDept && matchType && matchUnit && matchPos;
                     });
                 },
 
@@ -2384,6 +2520,7 @@
                     const filtered = this.searchQuery || this.selectedFilterIso || this.selectedFilterReview;
                     let where = this.isAllDocs ? 'di semua folder' : 'di folder ini';
                     if (this.isDeptFolder) where = !this.activeDept ? 'dari semua departemen' : (this.activeDept === '__none' ? 'yang belum dikategorikan' : 'milik ' + this.activeDept + (this.activeType ? (this.activeType === '__none' ? ', tanpa jenis dokumen' : ', jenis ' + this.activeType) : ''));
+                    if (this.isSoFolder) { const u = soUnit(this.activeUnit); where = !this.activeUnit ? 'dari semua departemen' : (this.activeUnit === '__none' ? 'sebagai struktur organisasi perusahaan' : 'milik ' + (u ? u.area + ' ' + u.dept : this.activeUnit) + (this.activePos ? ', posisi ' + this.activePos : '')); }
                     return (filtered ? 'Sesuai pencarian, ' : 'Terdaftar ') + where;
                 },
                 // Kelengkapan departemen: satu jenis dokumen dihitung terisi bila ada minimal satu dokumen yang tidak Obsolete.
@@ -2435,6 +2572,27 @@
                     if (!list.length) this.newDoc.docType = '';
                 },
                 get isDeptFolder() { return this.activeModule === 11 || this.activeModule === 12; },
+                // ---------- Folder 8: Struktur Organisasi dan Job Description ----------
+                get isSoFolder() { return this.activeModule === SO_MODULE; },
+                get showUnitGrid() { return this.isSoFolder && !this.activeUnit && this.searchQuery === ''; },
+                unitKeyOf(doc) { return doc && doc.dept && doc.area ? doc.area + '|' + doc.dept : ''; },
+                soDocs(key) { return this.documents.filter(d => d.moduleId === SO_MODULE && (key === '__none' ? !d.dept : this.unitKeyOf(d) === key)); },
+                // posisi yang sudah punya dokumen (tidak Obsolete) dihitung terisi
+                soInfo(key) {
+                    const u = soUnit(key), docs = this.soDocs(key), live = docs.filter(d => d.status !== 'Obsolete');
+                    const positions = u ? u.positions : [];
+                    const done = positions.filter(p => live.some(d => d.position === p)).length;
+                    return { docs: docs.length, positions: positions.length, done, pct: positions.length ? Math.round(done / positions.length * 100) : 0 };
+                },
+                posCount(p) { return this.soDocs(this.activeUnit).filter(d => d.position === p).length; },
+                get soGroups() { return ['HO', 'Site'].map(a => ({ area: a, units: SO_UNITS.filter(u => u.area === a) })); },
+                get activeUnitObj() { return soUnit(this.activeUnit); },
+                unitsOfArea(a) { return SO_UNITS.filter(u => u.area === a); },
+                positionsOf(key) { const u = soUnit(key); return u ? u.positions : []; },
+                docTag(doc) {
+                    if (doc.moduleId === SO_MODULE && doc.dept) return doc.area + ' · ' + doc.dept + (doc.position ? ' · ' + doc.position : '');
+                    return doc.dept ? doc.dept + ', ' + (doc.docType || 'tanpa jenis dokumen') : '';
+                },
                 get showDeptGrid() { return this.isDeptFolder && !this.activeDept && this.searchQuery === ''; },
                 // Di dalam satu departemen, tiap jenis dokumen tampil sebagai folder. Daftar dokumen muncul setelah jenisnya dipilih atau saat mencari.
                 get showTypeGrid() { return this.isDeptFolder && !!this.activeDept && this.activeDept !== '__none' && !this.activeType && this.searchQuery === ''; },
@@ -2442,14 +2600,14 @@
                 get newDocKind() { return (this.isDeptId(this.newDoc.moduleId) || !this.generalModules.length) ? 'dept' : 'umum'; },
                 get newDocDest() {
                     const mid = parseInt(this.newDoc.moduleId);
-                    if (this.newDocKind === 'umum') return this.folderName(mid) || 'pilih jenis dokumen';
+                    if (this.newDocKind === 'umum') { const u = mid === SO_MODULE ? soUnit(this.newDoc.unit) : null; return (this.folderName(mid) || 'pilih jenis dokumen') + (mid === SO_MODULE ? ' / ' + (u ? u.area + ' ' + u.dept + (this.newDoc.position ? ' / ' + this.newDoc.position : '') : 'Struktur organisasi perusahaan') : ''); }
                     if (!this.newDoc.dept) return 'pilih departemen dan jenis dokumennya';
                     return this.folderName(mid) + ' / ' + this.newDoc.dept + ' / ' + (this.newDoc.docType || 'pilih jenis dokumen');
                 },
                 setNewKind(kind) {
                     if (kind === this.newDocKind) return;
                     if (kind === 'dept') { this.newDoc.moduleId = DEPT_HO.includes(this.newDoc.dept) ? 12 : 11; }
-                    else { this.newDoc.moduleId = this.generalModules[0].id; this.newDoc.dept = ''; this.newDoc.docType = ''; }
+                    else { this.newDoc.moduleId = this.generalModules[0].id; this.newDoc.dept = ''; this.newDoc.docType = ''; this.newDoc.unit = ''; this.newDoc.position = ''; }
                 },
                 get docModules() { return this.modules.filter(m => m.id !== 13); },
                 get currentDepts() { return this.deptsOf(this.activeModule); },
@@ -2758,12 +2916,15 @@
                         rev: 0,
                         history: [{ rev: 0, spUrl: spUrlNew, version: this.newDoc.version, date: today, by: this.user.name, note: 'Dokumen pertama didaftarkan', changes: [] }]
                     };
+                    const unit = mid === SO_MODULE ? soUnit(this.newDoc.unit) : null;
+                    if (unit) { doc.area = unit.area; doc.dept = unit.dept; doc.position = unit.positions.includes(this.newDoc.position) ? this.newDoc.position : ''; }
                     if (file) { doc.file = file; doc.history[0].file = { ...file }; }
                     this.documents.unshift(doc);
                     this.showUploadModal = false;
                     this.newDoc.code = '';
                     this.newDoc.title = '';
                     this.newDoc.spUrl = '';
+                    this.newDoc.position = '';
                     this.clearFile('newDocFile');
                     this.$nextTick(() => { lucide.createIcons(); });
                 },
@@ -3025,6 +3186,8 @@
                     this.selectedFilterReview = '';
                     this.activeDept = '';
                     this.activeType = '';
+                    this.activeUnit = '';
+                    this.activePos = '';
                     this.searchQuery = '';
                     this.auditTab = 'internal';
                     this.findingFilter = { status: '', dept: '', q: '' };
@@ -3045,6 +3208,8 @@
                     if (!this.isAdmin && !DEPT_EDIT_FOLDERS.includes(parseInt(this.newDoc.moduleId))) this.newDoc.moduleId = DEPT_EDIT_FOLDERS[0];
                     this.newDoc.dept = (this.isDeptFolder && this.activeDept && this.activeDept !== '__none') ? this.activeDept : '';
                     this.newDoc.docType = (this.isDeptFolder && this.activeType !== '__none') ? this.activeType : '';
+                    this.newDoc.unit = (this.isSoFolder && this.activeUnit !== '__none') ? this.activeUnit : '';
+                    this.newDoc.position = this.isSoFolder && this.newDoc.unit ? this.activePos : '';
                     this.clearFile('newDocFile');
                     this.showUploadModal = true;
                     this.$nextTick(() => { lucide.createIcons(); });
@@ -3123,7 +3288,7 @@
                 openFindingReview(f) {
                     if (!this.isAdmin) return;
                     this.findingReviewTarget = f;
-                    this.findingReviewForm = { result: f.reviewResult || '', reviewer: f.reviewer || this.user.name, note: f.reviewNote || '' };
+                    this.findingReviewForm = { result: f.reviewResult || '', reviewer: REVIEWER_NAME, note: f.reviewNote || '' };
                     this.showFindingReview = true;
                     this.$nextTick(() => { lucide.createIcons(); });
                 },
@@ -3131,7 +3296,7 @@
                     const f = this.findingReviewTarget;
                     if (!this.isAdmin || !f || !this.findingReviewForm.result) return;
                     f.reviewResult = this.findingReviewForm.result;
-                    f.reviewer = this.findingReviewForm.reviewer;
+                    f.reviewer = REVIEWER_NAME;
                     f.reviewNote = this.findingReviewForm.note;
                     f.reviewDate = new Date().toISOString().split('T')[0];
                     this.showFindingReview = false;
@@ -3160,7 +3325,7 @@
                 openReview(doc) {
                     if(!this.isAdmin) return;
                     this.reviewDoc = doc;
-                    this.reviewForm = { result: doc.reviewStatus || '', reviewer: doc.reviewer || '', note: doc.reviewNote || '' };
+                    this.reviewForm = { result: doc.reviewStatus || '', reviewer: REVIEWER_NAME, note: doc.reviewNote || '' };
                     this.showReviewModal = true;
                     this.$nextTick(() => { lucide.createIcons(); });
                 },
@@ -3168,7 +3333,7 @@
                 submitReview() {
                     if(!this.isAdmin || !this.reviewDoc || !this.reviewForm.result) return;
                     this.reviewDoc.reviewStatus = this.reviewForm.result;
-                    this.reviewDoc.reviewer = this.reviewForm.reviewer;
+                    this.reviewDoc.reviewer = REVIEWER_NAME;
                     this.reviewDoc.reviewNote = this.reviewForm.note;
                     this.reviewDoc.reviewDate = new Date().toISOString().split('T')[0];
                     this.showReviewModal = false;
@@ -3183,7 +3348,7 @@
                 openEdit(doc) {
                     if (!this.canEdit(doc)) return;
                     this.editDoc = doc;
-                    this.editForm = { moduleId: doc.moduleId, code: doc.code, title: doc.title, version: doc.version, iso: [...doc.iso], status: doc.status, note: '', spUrl: doc.spUrl || '', dept: doc.dept || '', docType: doc.docType || '' };
+                    this.editForm = { moduleId: doc.moduleId, code: doc.code, title: doc.title, version: doc.version, iso: [...doc.iso], status: doc.status, note: '', spUrl: doc.spUrl || '', dept: doc.dept || '', docType: doc.docType || '', unit: doc.moduleId === SO_MODULE ? this.unitKeyOf(doc) : '', position: doc.position || '' };
                     this.editError = '';
                     this.clearFile('editDocFile');
                     this.showEditModal = true;
@@ -3199,7 +3364,9 @@
                     const isDept = moduleId === 11 || moduleId === 12;
                     if (!this.isAdmin && !DEPT_EDIT_FOLDERS.includes(moduleId)) { this.editError = 'Akun departemen hanya dapat memindahkan dokumen di folder dokumen departemen.'; return; }
                     const newStatus = this.isAdmin ? f.status : 'In Review';
-                    const dept = isDept ? f.dept : '', docType = isDept ? f.docType : '';
+                    const unit = moduleId === SO_MODULE ? soUnit(f.unit) : null;
+                    const dept = isDept ? f.dept : (unit ? unit.dept : ''), docType = isDept ? f.docType : '';
+                    const area = unit ? unit.area : '', position = unit && unit.positions.includes(f.position) ? f.position : '';
                     if (isDept && (!dept || !docType)) { this.editError = 'Pilih departemen dan jenis dokumennya.'; return; }
                     const picked = CLOUD_ON ? this.pickedFile('editDocFile') : null;
                     if (CLOUD_ON) {
@@ -3214,7 +3381,9 @@
                     if (iso !== [...d.iso].sort().join(', ')) changes.push('Cakupan standar menjadi ISO ' + (iso || '-'));
                     if (newStatus !== d.status) changes.push('Status: ' + d.status + ' menjadi ' + newStatus);
                     if (moduleId !== d.moduleId) changes.push('Dipindahkan ke folder ' + this.folderName(moduleId));
-                    if (dept !== (d.dept || '')) changes.push('Departemen: ' + (d.dept || '-') + ' menjadi ' + (dept || '-'));
+                    if (moduleId !== SO_MODULE && dept !== (d.dept || '')) changes.push('Departemen: ' + (d.dept || '-') + ' menjadi ' + (dept || '-'));
+                    if (moduleId === SO_MODULE && (area + '|' + dept) !== ((d.area || '') + '|' + (d.dept || ''))) changes.push('Departemen: ' + ((d.area ? d.area + ' ' : '') + (d.dept || '-')) + ' menjadi ' + (unit ? unit.area + ' ' + unit.dept : 'struktur organisasi perusahaan'));
+                    if (position !== (d.position || '')) changes.push('Posisi: ' + (d.position || '-') + ' menjadi ' + (position || '-'));
                     if (docType !== (d.docType || '')) changes.push('Jenis dokumen: ' + (d.docType || '-') + ' menjadi ' + (docType || '-'));
                     if (spChanged) changes.push('Link dokumen diperbarui');
                     if (picked) changes.push('File dokumen diperbarui (' + picked.name + ')');
@@ -3238,7 +3407,7 @@
                     const today = new Date().toISOString().split('T')[0];
                     d.rev = (d.rev || 0) + 1;
                     const nextSp = CLOUD_ON ? (file ? '' : (d.spUrl || '')) : spUrl;
-                    Object.assign(d, { code, title, version, iso: [...f.iso], status: newStatus, moduleId, updatedAt: today, spUrl: nextSp, dept, docType });
+                    Object.assign(d, { code, title, version, iso: [...f.iso], status: newStatus, moduleId, updatedAt: today, spUrl: nextSp, dept, docType, area, position });
                     if (file) d.file = file;
                     const h = { rev: d.rev, spUrl: spChanged ? spUrl : '', version, date: today, by: this.user.name, note: f.note.trim(), changes };
                     if (file) h.file = { ...file };
@@ -3271,7 +3440,7 @@
 
                 init() {
                     if (CLOUD_ON) { this.documents = []; this.findings = []; } else this.loadData();
-                    ['activeDept', 'activeType', 'auditTab', 'findings', 'showDeptGrid', 'activeModule'].forEach(k => this.$watch(k, () => this.$nextTick(() => { lucide.createIcons(); })));
+                    ['activeDept', 'activeType', 'activeUnit', 'activePos', 'auditTab', 'findings', 'showDeptGrid', 'activeModule'].forEach(k => this.$watch(k, () => this.$nextTick(() => { lucide.createIcons(); })));
                     if (!CLOUD_ON) { this.$watch('documents', () => this.persistDraft()); this.$watch('findings', () => this.persistDraft()); }
                     try {
                         const key = sessionStorage.getItem('ebl_user');
