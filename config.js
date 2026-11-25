@@ -13,9 +13,9 @@ window.EBL_CONFIG = {
     //    Cara mendapatkan kedua nilai ini ada di README.md bagian B.
     // -----------------------------------------------------------------
     cloud: {
-        dbUrl: 'https://doco-pt-ebl-default-rtdb.asia-southeast1.firebasedatabase.app',
-        apiKey: 'AIzaSyAIfAEenzU2ZROs6cKV6mI8pb0i2_fparw',
-        emailDomain: 'ebl.app'   
+        dbUrl: 'https://doco-ebl-default-rtdb.firebaseio.com',          // contoh: 'https://nama-proyek-default-rtdb.asia-southeast1.firebasedatabase.app'
+        apiKey: 'AIzaSyCkc9dh9ARDVZOrP1ArfKKjMBNEW8F6w6U',         // contoh: 'AIzaSy................................'
+        emailDomain: 'ebl.app'   // akun Firebase dibuat sebagai username@ebl.app
     },
 
     // -----------------------------------------------------------------

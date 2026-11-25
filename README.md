@@ -18,6 +18,7 @@ Aplikasi punya dua mode. Mode yang aktif tertulis kecil di bawah tombol Masuk.
 | --- | --- | --- |
 | Aktif bila | `dbUrl` dan `apiKey` di `config.js` kosong | Keduanya terisi |
 | Data disimpan di | `data.json` di GitHub | Firebase Realtime Database |
+| File dokumen | Ditempel sebagai link | Diunggah langsung dari website |
 | Perubahan terlihat pengguna lain | Setelah `data.json` diunggah ulang | Saat itu juga |
 | Kata sandi diperiksa oleh | Hash di `config.js` | Firebase Authentication |
 
@@ -25,7 +26,7 @@ Aplikasi punya dua mode. Mode yang aktif tertulis kecil di bawah tombol Masuk.
 
 ## A. Pasang ke GitHub
 
-1. Buka repositori `Document-Control-PT-EBL` di GitHub.
+1. Buka repositori `docoebl/Document-Control-PT-Energi-Batubara-Lestari` di GitHub.
 2. Klik **Add file > Upload files**.
 3. Seret `index.html`, `config.js`, `firebase-rules.json`, `README.md`, dan folder `tools` ke halaman unggah. Jangan unggah `data.json` baru, biarkan yang lama.
 4. Klik **Commit changes**.
@@ -58,7 +59,9 @@ Perlu akun Google. Paket gratis Firebase (Spark) cukup untuk pemakaian ini. Nama
 2. Hapus semua isinya, tempel seluruh isi file `firebase-rules.json`.
 3. Klik **Publish**.
 
-Firebase akan memberi peringatan bahwa data bisa dibaca publik. Itu memang disengaja, karena tombol "Lihat dokumen" bekerja tanpa login. Yang bisa menulis hanya akun `docoebl` dan `dept`.
+Dengan aturan ini, daftar dokumen (nomor, judul, status) bisa dibaca tanpa login, tetapi **isi file hanya bisa dibuka setelah login** dengan salah satu dari tiga akun. Yang bisa menulis hanya akun `docoebl` dan `dept`.
+
+Setiap kali `firebase-rules.json` berubah (misalnya setelah memperbarui website), ulangi langkah ini.
 
 ### 4. Aktifkan login dan buat akun
 
@@ -107,6 +110,58 @@ Buat ketiga akun sebelum membagikan link website.
 
 ---
 
+## Dashboard
+
+Halaman pertama setelah login menampilkan tiga hal:
+
+- **Jumlah dokumen** terdaftar, dengan pembagian Approved, dalam review, dan status lain.
+- **Kelengkapan dokumen tiap departemen.** Setiap departemen perlu punya minimal satu dokumen untuk tujuh jenis dokumen (KPI, Job Description, IBPR IADL, SOP, Form, IK, STD). Persentasenya adalah jumlah jenis dokumen yang sudah terisi dibagi tujuh. Dokumen berstatus Obsolete tidak dihitung.
+- **Temuan audit internal dan eksternal**, dengan persentase capaian, yaitu temuan yang hasil review-nya sudah "Sesuai" dibagi seluruh temuan.
+
+Daftar seluruh dokumen lintas folder ada di menu **Semua Dokumen**.
+
+---
+
+## Folder 8: Struktur Organisasi dan Job Description
+
+Folder 8 berisi satu folder untuk setiap departemen, dikelompokkan Head Office (HO) dan Site, ditambah folder "Struktur organisasi perusahaan" untuk bagan organisasi tingkat perusahaan. Di dalam tiap departemen tampil daftar posisinya; posisi yang sudah punya dokumen ditandai centang, dan persentase di kartu departemen menunjukkan berapa posisi yang sudah punya job description.
+
+Saat menambah dokumen ke folder 8, pilih departemen dan (untuk job description) posisinya. Daftar departemen dan posisi ada di `SO_UNITS` di `index.html`.
+
+Nama reviewer pada review dokumen dan review temuan audit selalu "Document Control" dan tidak bisa diubah.
+
+---
+
+## Unggah dokumen langsung
+
+Pada mode realtime, kolom "Link Dokumen" diganti kolom **File Dokumen**. File dipilih dari komputer dan disimpan di Firebase, tidak perlu SharePoint.
+
+- Jenis file: PDF, Word, Excel, PowerPoint, PNG, JPG. Maksimal **15 MB** per file.
+- Tombol **Buka** hanya menampilkan dokumen di layar, untuk semua akun, tanpa tombol unduh atau cetak. Semua jenis file yang bisa diunggah bisa dilihat: PDF, gambar, **Word (.docx), Excel (.xlsx), dan PowerPoint (.pptx)**.
+- Word, Excel, dan PowerPoint digambar ulang di browser, jadi tampilannya disederhanakan: huruf, jarak, dan posisi bisa sedikit berbeda dari aplikasi Office, dan grafik, SmartArt, serta gambar berformat EMF/WMF tidak ditampilkan. Untuk dokumen yang tampilannya harus persis (misalnya formulir bertanda tangan), unggah sebagai PDF.
+- Format Office lama (.doc, .xls, .ppt) tidak bisa ditampilkan di browser, jadi tidak bisa diunggah lagi. Simpan ulang di Office sebagai .docx, .xlsx, atau .pptx (File > Save As) sebelum diunggah. File lama yang sudah terlanjur diunggah tetap bisa diunduh Document Controller.
+- Tombol **Unduh** (ikon panah ke bawah): Document Controller mendapat file asli. Akun **Departemen selalu mendapat salinan berformat PDF dengan watermark hitam "TIDAK TERKENDALI"** di setiap halaman, dan nama filenya ikut diberi tanda. Gambar (PNG, JPG) otomatis dijadikan PDF satu halaman.
+- Word, Excel, PowerPoint, dan PDF yang terkunci kata sandi tidak bisa diubah menjadi PDF ber-watermark di website ini, jadi hanya bisa diunduh Document Controller. Akun lain tetap bisa melihatnya lewat tombol Buka. Unggah dokumen terkendali sebagai **PDF** (di Word: File > Save As > PDF) agar bisa dilihat dan diunduh semua akun.
+- **Bukti perbaikan temuan audit bisa lebih dari satu file**, paling banyak 20 file per temuan. Pilih beberapa file sekaligus, atau tekan "Pilih file" berulang kali; daftar file yang akan diunggah tampil sebelum disimpan. Bukti yang sudah diunggah tampil di tabel temuan, di jendela unggah bukti, dan di jendela review. Menambah bukti tidak menghapus bukti lama. Hanya Document Controller yang bisa menghapus file bukti (lewat tombol edit temuan).
+- Bukti perbaikan temuan audit bukan dokumen terkendali, jadi diunduh tanpa watermark (hanya Document Controller dan Departemen).
+- Akun **Viewer hanya bisa melihat dokumen di layar** dan tidak punya tombol Unduh. Untuk mengizinkan Viewer mengunduh salinan ber-watermark, ubah `VIEWER_CAN_DOWNLOAD = false` menjadi `true` di `index.html`. Teks watermark ada di `WATERMARK_TEXT`, kepekatannya di `WATERMARK_OPACITY`.
+- Saat menambah dokumen, pilih dulu **dokumen apa yang diunggah**: Dokumen ISO umum atau Dokumen departemen. Untuk dokumen umum, pilih jenisnya (folder 1 sampai 10). Untuk dokumen departemen, pilih departemen dan jenis dokumennya (KPI, Job Description, IBPR IADL, SOP, Form, IK, STD). Baris "Disimpan ke" menunjukkan folder tujuannya.
+- Di folder 11 dan 12, setiap departemen berisi folder per jenis dokumen. Dokumen yang diunggah otomatis masuk ke folder jenisnya.
+- Saat merevisi dokumen, unggah file revisi lewat tombol edit. File revisi lama tetap bisa dibuka dari riwayat revisi.
+- Bukti perbaikan temuan audit diunggah dengan cara yang sama.
+- Dokumen lama yang masih berupa link tetap bisa dibuka seperti biasa.
+- Menghapus dokumen ikut menghapus semua file revisinya.
+
+**Kapasitas.** Paket gratis Firebase menyediakan 1 GB. Karena cara penyimpanannya, itu setara kira-kira **700 MB file asli**. Pantau pemakaian di Firebase Console > Realtime Database > tab **Usage**. Kalau mendekati penuh, hapus dokumen usang atau pindah ke paket berbayar.
+
+---
+
+## Pindah ke proyek Firebase lain
+
+Gunakan `tools/pindah-data.html` (buka `alamat-website/tools/pindah-data.html`). Halaman ini login ke database lama dan database baru dengan akun Document Controller masing-masing, lalu menyalin isi semua file, daftar dokumen, dan temuan audit. Database lama tidak diubah. Kalau proses terputus, jalankan lagi; file yang sudah tersalin dilewati. Setelah selesai, ganti `dbUrl` dan `apiKey` di `config.js` ke proyek baru.
+
+---
+
 ## C. Mengganti kata sandi
 
 **Mode realtime:** Firebase Console > Authentication > Users > titik tiga di baris akun > **Reset password**. Tidak ada file yang perlu diunggah.
@@ -137,6 +192,9 @@ Jangan menulis kata sandi asli di file mana pun. Repositori ini bisa dibaca publ
 | "apiKey di config.js tidak valid" | Salin ulang Web API Key, pastikan tidak ada spasi atau karakter terpotong. |
 | "Login Email/Password belum diaktifkan" | Ulangi langkah B.4. |
 | "Server menolak perubahan (kode 401 atau 403)" | Aturan belum dipasang (B.3), atau akun tidak punya hak menulis. |
+| "Unggahan ditolak server" atau "Akses file ditolak server" | Aturan di Firebase masih versi lama. Tempel ulang isi `firebase-rules.json` terbaru di tab Rules lalu Publish. |
+| Kolom yang muncul "Link Dokumen", bukan "File Dokumen" | Website masih mode lokal. Unggah file hanya ada pada mode realtime. |
+| "Ukuran file melebihi batas 15 MB" | Perkecil file (misalnya kompres PDF) atau pecah menjadi beberapa dokumen. |
 | "Gagal membaca data (kode 401)" | Aturan belum dipasang atau `dbUrl` salah. |
 | Tertulis "Mode lokal" padahal config sudah diisi | `config.js` belum ter-commit, atau browser masih memakai versi lama. Tunggu 2 menit lalu Ctrl+Shift+R. |
 | Penanda bertuliskan "Tersinkron hh:mm:ss", bukan "Realtime" | Jaringan memblokir koneksi langsung. Aplikasi otomatis memeriksa data setiap 10 detik, jadi tetap berfungsi. |
@@ -149,7 +207,7 @@ Jangan menulis kata sandi asli di file mana pun. Repositori ini bisa dibaca publ
 
 - **Mode lokal hanya penghalang tampilan.** Semua pemeriksaan terjadi di browser, sehingga orang yang paham teknis bisa melewatinya. Pakai mode ini hanya sementara.
 - **Mode realtime benar-benar membatasi siapa yang bisa mengubah data**, karena penulisan diperiksa oleh server Firebase.
-- Pada kedua mode, daftar dokumen dan link SharePoint bisa dibaca siapa pun yang punya alamat website. Isi file tetap dilindungi izin SharePoint.
+- Pada mode realtime, daftar dokumen (nomor, judul, status) bisa dibaca siapa pun yang tahu alamat database. Isi file yang diunggah hanya bisa dibuka setelah login.
 - `apiKey` Firebase memang dirancang untuk terlihat publik. Yang melindungi data adalah aturan di `firebase-rules.json`.
 - Batas paket gratis Firebase: 100 koneksi bersamaan, 1 GB data tersimpan, 10 GB unduhan per bulan.
 - Sesekali cadangkan data: Firebase Console > Realtime Database > titik tiga > **Export JSON**.

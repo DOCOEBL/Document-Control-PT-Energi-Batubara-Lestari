@@ -1,7 +1,7 @@
 {
   "rules": {
-    ".read": true,
     "documents": {
+      ".read": true,
       "$id": {
         ".write": "auth != null && (auth.token.email === 'docoebl@ebl.app' || (auth.token.email === 'dept@ebl.app' && newData.exists() && (newData.child('m').val() === 11 || newData.child('m').val() === 12) && (!data.exists() || data.child('m').val() === 11 || data.child('m').val() === 12)))",
         ".validate": "newData.hasChildren(['j', 'm'])",
@@ -17,11 +17,47 @@
       }
     },
     "findings": {
+      ".read": true,
       "$id": {
         ".write": "auth != null && (auth.token.email === 'docoebl@ebl.app' || (auth.token.email === 'dept@ebl.app' && data.exists() && newData.exists()))",
         ".validate": "newData.hasChildren(['j'])",
         "j": {
           ".validate": "newData.isString() && newData.val().length <= 500000"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "files": {
+      "$fid": {
+        ".read": "auth != null && (auth.token.email === 'docoebl@ebl.app' || auth.token.email === 'dept@ebl.app' || auth.token.email === 'viewer@ebl.app')",
+        ".write": "auth != null && (auth.token.email === 'docoebl@ebl.app' || (auth.token.email === 'dept@ebl.app' && !data.child('i').exists()))",
+        "i": {
+          ".validate": "newData.hasChildren(['n', 's', 'k'])",
+          "n": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
+          "s": {
+            ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 15728640"
+          },
+          "k": {
+            ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 20"
+          },
+          "m": {
+            ".validate": "newData.isNumber()"
+          },
+          "d": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "c": {
+          "$n": {
+            ".validate": "newData.isString() && newData.val().length <= 1500000"
+          }
         },
         "$other": {
           ".validate": false
